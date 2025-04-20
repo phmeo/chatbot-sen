@@ -1,10 +1,6 @@
 
 # Byte-compiled / optimized / DLL files
-volumes/*
-
-
-
-
+data/volumes/*
 
 
 
