@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tư vấn tuyển sinh Sentia</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Background overlay -->
+    <div class="chat-overlay" id="chat-overlay"></div>
+
+    <div class="chat-widget">
+        <!-- Chat Icon -->
+        <div class="chat-icon" id="chat-icon">
+            <div class="icon-container">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="icon-title">Sentia Assistant</div>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <div class="header-title">
+                    <i class="fas fa-robot"></i>
+                    <h1>Tư vấn tuyển sinh Sentia</h1>
+                </div>
+                <div class="header-actions">
+                    <button id="minimize-chat" class="icon-button">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome message -->
+                <div class="message assistant-message">
+                    Xin chào! Tôi có thể giúp gì cho bạn về thông tin tuyển sinh?
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <textarea id="user-input" placeholder="Nhập câu hỏi của bạn..." rows="1"></textarea>
+                <button id="send-button" class="icon-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
