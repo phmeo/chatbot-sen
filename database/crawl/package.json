@@ -1,0 +1,14 @@
+{
+    "name": "crawl_sentia",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Crawl và xử lý nội dung từ Sentia School",
+    "main": "crawl.js",
+    "scripts": {
+        "start": "bun run crawl.js"
+    },
+    "dependencies": {
+        "axios": "^1.6.0",
+        "cheerio": "^1.0.0-rc.12"
+    }
+}

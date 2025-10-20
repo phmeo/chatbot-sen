@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import PyPDF2
+import pdfplumber
 from dotenv import load_dotenv
 from openai import OpenAI
 from pymilvus import connections, Collection, utility
@@ -11,17 +11,21 @@ import numpy as np
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPEN_API_KEY')
 
+# Khởi tạo OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 # Milvus connection parameters
 MILVUS_HOST = 'localhost'
 MILVUS_PORT = '19530'
 
 def get_pdf_text(pdf_path):
-    """Extract text from PDF file."""
+    """Extract text from PDF file using pdfplumber."""
     text = ""
-    with open(pdf_path, 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
-        for page in reader.pages:
-            text += page.extract_text()
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:  # Kiểm tra page có text không
+                text += page_text + "\n"  # Thêm xuống dòng giữa các trang
     return text
 
 def chunk_text(text, chunk_size=512, overlap=150):
@@ -65,22 +69,31 @@ def update_milvus():
         collection = Collection(collection_name)
     
     # Process PDF files
-    save_dir = Path("save")
-    for pdf_file in save_dir.glob("*.pdf"):
+    current_dir = Path(".")  # Thư mục hiện tại thay vì thư mục "save"
+    pdf_files = list(current_dir.glob("*.pdf"))
+    
+    if not pdf_files:
+        print("Không tìm thấy file PDF nào trong thư mục hiện tại")
+        return
+    
+    for pdf_file in pdf_files:
         print(f"Processing {pdf_file.name}...")
         
         # Extract text from PDF
         text = get_pdf_text(pdf_file)
+        print(f"Đã trích xuất {len(text)} ký tự từ {pdf_file.name}")
         
         # Split into chunks
         chunks = chunk_text(text)
+        print(f"Đã chia thành {len(chunks)} chunks")
         
         # Prepare data for insertion
         texts = []
         embeddings = []
         sources = []
         
-        for chunk in chunks:
+        for i, chunk in enumerate(chunks):
+            print(f"Đang tạo embedding cho chunk {i+1}/{len(chunks)}")
             embedding = get_embedding(chunk)
             texts.append(chunk)
             embeddings.append(embedding)
@@ -92,8 +105,8 @@ def update_milvus():
             embeddings,
             sources
         ]
-        collection.insert(entities)
-        print(f"Inserted {len(chunks)} chunks from {pdf_file.name}")
+        insert_result = collection.insert(entities)
+        print(f"Đã chèn {len(chunks)} chunks từ {pdf_file.name} vào Milvus. Insert IDs: {insert_result.primary_keys[:5]}...")  # Hiển thị 5 ID đầu tiên
     
     # Create index if not exists
     if not collection.has_index():
@@ -106,6 +119,13 @@ def update_milvus():
     
     # Load collection
     collection.load()
+    
+    # Flush để đảm bảo dữ liệu được ghi vào disk
+    collection.flush()
+    
+    # Kiểm tra số lượng document trong collection
+    print(f"Tổng số document trong collection: {collection.num_entities}")
+    
     print("Milvus update completed successfully")
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import numpy as np
 from typing import List, Dict
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from facebook_messenger import FacebookMessenger
 
 # Load environment variables
 load_dotenv()
@@ -142,6 +143,9 @@ def generate_response(query: str, context_chunks: List[Dict]):
     
     return response.choices[0].message.content
 
+# Initialize Facebook Messenger (sau khi các hàm đã được định nghĩa)
+fb_messenger = FacebookMessenger(search_similar_chunks, generate_response)
+
 @app.route('/')
 def serve_frontend():
     return send_from_directory('frontend', 'index.html')
@@ -189,6 +193,29 @@ def chat():
         return jsonify({
             'error': str(e)
         }), 500
+
+@app.route('/webhook', methods=['GET', 'POST'])
+def webhook():
+    """Facebook Messenger webhook endpoint"""
+    if request.method == 'GET':
+        # Xác thực webhook
+        return fb_messenger.verify_webhook()
+    
+    elif request.method == 'POST':
+        # Xử lý tin nhắn
+        return fb_messenger.handle_webhook()
+
+@app.route('/setup-messenger', methods=['POST'])
+def setup_messenger():
+    """Thiết lập các tính năng Messenger (chỉ chạy một lần)"""
+    try:
+        success = fb_messenger.set_get_started_button()
+        if success:
+            return jsonify({'message': 'Messenger setup successful'})
+        else:
+            return jsonify({'error': 'Failed to setup messenger'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
